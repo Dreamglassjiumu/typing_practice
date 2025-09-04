@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0ea5e9" />
   <meta name="color-scheme" content="light dark" />
-  <title>Typing Practice · 单文件版</title>
+  <title>Typing Fun</title>
   <style>
     :root{
-      --bg1:#f0f7ff; --bg2:#fafafa; --fg:#0b0f19; --card:#ffffffcc; --muted:#6b7280; --ok:#047857; --err:#b91c1c;
+      --bg1:#f0f7ff; --bg2:#fafafa; --fg:#0b0f19; --card:#ffffffcc; --muted:#6b7280; --ok:#047857; --err:#b91c1c; --accent:#0ea5e9;
     }
     @media (prefers-color-scheme: dark){
       :root{ --bg1:#0b0f19; --bg2:#0b0f19; --fg:#e5e7eb; --card:#111827e6; --muted:#9ca3af; }
@@ -16,22 +16,22 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;font:16px/1.6 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;color:var(--fg);background:linear-gradient(180deg,var(--bg1),var(--bg2));}
-    .container{max-width:900px;margin:0 auto;padding:24px}
+    .container{max-width:980px;margin:0 auto;padding:24px}
     .row{display:flex;gap:12px;align-items:center}
     .card{background:var(--card);backdrop-filter:saturate(1.2) blur(2px);box-shadow:0 6px 20px rgba(0,0,0,.08);border-radius:16px}
     .btn{padding:10px 14px;border-radius:12px;border:1px solid #0001;background:#fff8;cursor:pointer}
     .btn:hover{filter:brightness(1.05)}
     @media(prefers-color-scheme:dark){.btn{background:#1f2937;color:#e5e7eb;border-color:#fff1}}
-
+    .btn.primary{background:var(--accent);border-color:transparent;color:white}
     h1{margin:0;font-size:22px}
     .muted{color:var(--muted)}
 
-    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
     .stat{padding:12px}
     .stat .k{font-size:12px;color:var(--muted)}
     .stat .v{font-weight:700;font-size:20px}
 
-    .prompt{padding:16px 18px;font-size:18px;line-height:1.9}
+    .prompt{padding:16px 18px;font-size:18px;line-height:1.9;white-space:pre-wrap}
     .green{color:var(--ok)}
     .red{color:var(--err);background:rgba(185,28,28,.06)}
     .caret{display:inline-block;width:2px;height:20px;background:currentColor;vertical-align:-3px;animation:blink 1s steps(1) infinite}
@@ -40,41 +40,85 @@
     .input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid #0001;background:#fff}
     @media(prefers-color-scheme:dark){.input{background:#111827;color:#e5e7eb;border-color:#fff1}}
 
-    textarea{width:100%;min-height:140px;padding:12px;border-radius:12px;border:1px solid #0001;background:#fff}
+    textarea{width:100%;min-height:180px;padding:12px;border-radius:12px;border:1px solid #0001;background:#fff}
     @media(prefers-color-scheme:dark){textarea{background:#111827;color:#e5e7eb;border-color:#fff1}}
 
     .footer{font-size:12px;color:var(--muted);padding-top:12px}
+
+    .progress{height:10px;border-radius:999px;background:#0001;overflow:hidden}
+    .progress>i{display:block;height:100%;background:var(--accent);width:0}
+    .chip{padding:6px 10px;border-radius:999px;background:#fff8;border:1px solid #0001}
+    @media(prefers-color-scheme:dark){.chip{background:#1f2937;color:#e5e7eb;border-color:#fff1}}
+
+    .fullnav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .badge{padding:4px 8px;border-radius:999px;background:#fff4;border:1px solid #0001}
   </style>
 </head>
 <body>
   <div class="container">
     <div class="row" style="justify-content:space-between;margin-bottom:12px">
-      <h1>打字练习 · Typing Practice</h1>
+      <h1>Typing Fun</h1>
       <div class="row">
         <button id="langBtn" class="btn">中文</button>
-        <button id="customBtn" class="btn">自定义</button>
+        <button id="themeBtn" class="btn">主题</button>
+        <button id="soundBtn" class="btn">错误提示音 开</button>
+        <button id="libraryBtn" class="btn primary">全文库</button>
+        <button id="customBtn" class="btn">句库</button>
       </div>
     </div>
+
+    <section class="card" style="padding:12px;margin-bottom:12px">
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <span class="muted">目标：</span>
+        <select id="goalType" class="chip">
+          <option value="none">不限</option>
+          <option value="time">时长</option>
+          <option value="chars">字数</option>
+        </select>
+        <select id="goalValue" class="chip"></select>
+        <span class="muted" id="goalHint"></span>
+        <div class="progress" style="flex:1;min-width:200px">
+          <i id="goalBar"></i>
+        </div>
+        <button id="exportBtn" class="btn">导出成绩 CSV</button>
+        <button id="pauseBtn" class="btn">暂停</button>
+        <button id="resetBtn" class="btn">重置</button>
+      </div>
+    </section>
 
     <section class="stats">
       <div class="card stat"><div class="k">用时</div><div class="v" id="tTime">00:00</div></div>
       <div class="card stat"><div class="k">CPM</div><div class="v" id="tCPM">0</div></div>
       <div class="card stat"><div class="k">WPM</div><div class="v" id="tWPM">0</div></div>
-      <div class="card stat"><div class="k">准确率</div><div class="v" id="tACC">100%</div></div>
+      <div class="card stat"><div class="k">准确率(字)</div><div class="v" id="tACC">100%</div></div>
+      <div class="card stat"><div class="k">历史最佳 WPM</div><div class="v" id="best">0</div></div>
     </section>
 
     <section id="promptCard" class="card prompt" style="margin-top:14px"></section>
 
     <div class="row" style="margin-top:12px">
-      <input id="input" autocomplete="off" class="input" placeholder="在这里输入上面的句子，然后回车或继续输入……" />
+      <input id="input" autocomplete="off" class="input" placeholder="在这里输入上面的内容……（全文模式支持分页与进度记忆）" />
     </div>
 
-    <div class="row" style="margin-top:12px">
-      <button id="resetBtn" class="btn">重新开始</button>
-      <button id="nextBtn" class="btn">下一句</button>
-      <div style="margin-left:auto" class="muted">历史最佳 WPM：<b id="best">0</b></div>
+    <div class="row" style="margin-top:12px;align-items:center">
+      <div id="fullNav" class="fullnav" style="display:none">
+        <span class="badge" id="fullState">全文模式</span>
+        <span class="muted">第 <b id="pageNo">1</b> / <b id="pageTotal">1</b> 页</span>
+        <div class="progress" style="width:160px"><i id="pageBar"></i></div>
+        <button id="prevPage" class="btn">上一页</button>
+        <button id="nextPage" class="btn primary">下一页</button>
+        <button id="resumeBtn" class="btn">继续上次</button>
+        <button id="restartBtn" class="btn">从头开始</button>
+      </div>
+      <div style="margin-left:auto" class="row">
+        <button id="nextBtn" class="btn primary">下一句</button>
+        <button id="fullBtn" class="btn">使用全文练习</button>
+        <button id="restoreBtn" class="btn">恢复内置</button>
+        <span class="muted">提示：先求准确，再提速。</span>
+      </div>
     </div>
 
+    <!-- 句库（每行一条） -->
     <section id="customPanel" class="card" style="display:none;margin-top:14px;padding:12px">
       <div class="muted" style="margin-bottom:8px">自定义句库（每行一条），会覆盖当前语言的内置句子。</div>
       <textarea id="customTA" placeholder="每行一条练习句子\n例如：\n保持放松，先求准确，再逐步提速。\nTyping is a rhythm, not a race."></textarea>
@@ -84,13 +128,35 @@
       </div>
     </section>
 
+    <!-- 全文库（支持长文本、文件导入、保存/导出、分页设置） -->
+    <section id="libraryPanel" class="card" style="display:none;margin-top:14px;padding:12px">
+      <div class="muted" style="margin-bottom:8px">把整篇文章/多段文本粘贴到下面，保存后可一键“使用全文练习”。</div>
+      <textarea id="libTA" placeholder="在此粘贴整篇文章或多篇内容，支持换行。"></textarea>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap">
+        <input type="file" id="libFile" accept=".txt" class="btn" />
+        <label class="muted">每页字数</label>
+        <select id="libPageSize" class="chip">
+          <option value="400">400</option>
+          <option value="800" selected>800</option>
+          <option value="1200">1200</option>
+          <option value="1600">1600</option>
+        </select>
+        <button id="libSave" class="btn primary">保存库</button>
+        <button id="libExport" class="btn">导出库为 TXT</button>
+        <button id="libClear" class="btn">清空库</button>
+        <button id="libUse" class="btn">使用全文练习</button>
+      </div>
+      <div class="muted" style="margin-top:6px">库内容与分页设置保存在浏览器（localStorage）。会自动记忆练到哪一页与位置。</div>
+    </section>
+
     <div class="footer">
-      Tips：先保证准确率，再逐步提升速度。建议每日 10~15 分钟高质量练习。<br/>
-      PWA：本页在支持的浏览器/域名下可“添加到主屏幕”。如需完全离线，请将本文件部署到 https:// 或 localhost 以启用 Service Worker。
+      PWA：HTTPS 或 localhost 下，浏览器菜单可“添加到主屏幕”，离线可用。<br/>
+      数据与设置保存在本机浏览器（localStorage）。
     </div>
   </div>
 
   <script>
+    // ===== 句库与默认数据 =====
     const CN = [
       "保持放松，先求准确，再逐步提速。",
       "专注十分钟的高质量练习，胜过漫长而松散的练习。",
@@ -109,6 +175,7 @@
       "Good posture reduces fatigue and improves control.",
     ];
 
+    // ===== DOM =====
     const $ = sel => document.querySelector(sel);
     const promptCard = $('#promptCard');
     const input = $('#input');
@@ -119,35 +186,120 @@
     const bestEl = $('#best');
 
     const langBtn = $('#langBtn');
+    const themeBtn = $('#themeBtn');
+    const soundBtn = $('#soundBtn');
+
     const customBtn = $('#customBtn');
     const customPanel = $('#customPanel');
     const importBtn = $('#importBtn');
     const cancelBtn = $('#cancelBtn');
     const customTA = $('#customTA');
-    const resetBtn = $('#resetBtn');
+
+    const libraryBtn = $('#libraryBtn');
+    const libraryPanel = $('#libraryPanel');
+    const libTA = $('#libTA');
+    const libFile = $('#libFile');
+    const libSave = $('#libSave');
+    const libExport = $('#libExport');
+    const libClear = $('#libClear');
+    const libUse = $('#libUse');
+    const libPageSizeSel = $('#libPageSize');
+
+    const fullNav = $('#fullNav');
+    const pageNoEl = $('#pageNo');
+    const pageTotalEl = $('#pageTotal');
+    const pageBar = $('#pageBar');
+    const fullState = $('#fullState');
+    const prevPageBtn = $('#prevPage');
+    const nextPageBtn = $('#nextPage');
+    const resumeBtn = $('#resumeBtn');
+    const restartBtn = $('#restartBtn');
+
     const nextBtn = $('#nextBtn');
+    const resetBtn = $('#resetBtn');
+    const exportBtn = $('#exportBtn');
+    const pauseBtn = $('#pauseBtn');
+    const restoreBtn = $('#restoreBtn');
 
-    const BEST_KEY = 'typing.best.wpm';
-    const LANG_KEY = 'typing.lang';
+    const goalType = $('#goalType');
+    const goalValue = $('#goalValue');
+    const goalBar = $('#goalBar');
+    const goalHint = $('#goalHint');
 
-    let lang = localStorage.getItem(LANG_KEY) || 'CN';
-    let pool = lang==='CN'? CN : EN;
+    // ===== 本地存储键 =====
+    const LS = {
+      best: 'typing.best.wpm',
+      lang: 'typing.lang',
+      theme: 'typing.theme',
+      sound: 'typing.sound',
+      goalType: 'typing.goal.type',
+      goalValue: 'typing.goal.value',
+      library: 'typing.library.text',
+      pageSize: 'typing.library.pageSize',
+      progress: 'typing.library.progress', // 以库hash为键的对象
+    };
+
+    // ===== 状态 =====
+    let lang = localStorage.getItem(LS.lang) || 'CN';
+    let pool = lang==='CN'? CN : EN; // 句子模式的池
     let idx = 0;
     let prompt = pool[idx];
     let typed = '';
     let startAt = null; // ms timestamp
     let now = Date.now();
-    let tickId = null;
+    let paused = false;
 
-    function loadBest(){ return Number(localStorage.getItem(BEST_KEY) || 0); }
-    function saveBest(v){ localStorage.setItem(BEST_KEY, String(Math.round(v))); bestEl.textContent = Math.round(v); }
+    // 全文模式相关
+    let fullMode = false;
+    let pages = [];
+    let pageIndex = 0; // 当前页索引
+    let libHash = '';
+
+    // 主题
+    const theme = localStorage.getItem(LS.theme) || 'auto';
+    function setTheme(t){
+      if(t==='light'){ document.documentElement.style.colorScheme = 'light'; }
+      else if(t==='dark'){ document.documentElement.style.colorScheme = 'dark'; }
+      else { document.documentElement.style.colorScheme = '';} // 跟随系统
+      localStorage.setItem(LS.theme, t);
+    }
+    setTheme(theme);
+
+    // 错误提示音
+    let soundOn = (localStorage.getItem(LS.sound) ?? '1') === '1';
+    function beep(){
+      if(!soundOn) return;
+      try{ const ctx = new (window.AudioContext||window.webkitAudioContext)(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.type='square'; o.frequency.value=600; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.05, ctx.currentTime); o.start(); o.stop(ctx.currentTime + 0.08);}catch(e){}
+    }
+
+    function loadBest(){ return Number(localStorage.getItem(LS.best) || 0); }
+    function saveBest(v){ localStorage.setItem(LS.best, String(Math.round(v))); bestEl.textContent = Math.round(v); }
 
     function pad2(n){ return String(n).padStart(2,'0'); }
-
     function formatTime(ms){ const s = Math.floor(ms/1000); return pad2(Math.floor(s/60))+':'+pad2(s%60); }
 
+    // ===== 工具：hash 与分页 =====
+    function hashStr(s){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h) + s.charCodeAt(i); h|=0; } return (h>>>0).toString(16); }
+    function paginate(text, size){
+      // 基于段落/句子尽量在空白或标点处分割
+      const target = Math.max(200, Number(size)||800);
+      const out=[]; let buf='';
+      const parts = text.replace(/\r/g,'').split(/(\n\n+|。|！|？|\!|\?|\.|；|;)/);
+      for(let i=0;i<parts.length;i++){
+        const chunk = parts[i]; if(!chunk) continue;
+        if((buf+chunk).length <= target){ buf += chunk; }
+        else { if(buf.trim()) out.push(buf); buf = chunk; if(buf.length>target*1.2){ // 超长段强切
+            for(let j=0;j<buf.length; j+=target){ out.push(buf.slice(j, j+target)); }
+            buf='';
+        }}
+      }
+      if(buf.trim()) out.push(buf);
+      return out.length? out : [text];
+    }
+
+    // ===== 渲染 =====
     function render(){
-      // render highlighted prompt vs typed
+      // 文本高亮
       promptCard.replaceChildren();
       const n = Math.max(prompt.length, typed.length);
       for(let i=0;i<n;i++){
@@ -159,12 +311,9 @@
         else { span.className = 'red'; span.textContent = p || '□'; }
         promptCard.appendChild(span);
       }
-      // caret
-      const caret = document.createElement('span');
-      caret.className = 'caret';
-      promptCard.appendChild(caret);
+      const caret = document.createElement('span'); caret.className='caret'; promptCard.appendChild(caret);
 
-      // stats
+      // 统计
       const elapsed = startAt? Math.max(1, now - startAt) : 1;
       const minutes = elapsed / 60000;
       const chars = typed.length;
@@ -172,74 +321,172 @@
       const cpm = chars>0? chars/minutes : 0;
       const wpm = cpm/5;
       const acc = chars>0? 100*correct/Math.max(1, chars) : 100;
-
       tTime.textContent = formatTime(elapsed);
       tCPM.textContent = String(Math.round(cpm));
       tWPM.textContent = String(Math.round(wpm));
       tACC.textContent = Math.round(acc)+'%';
+      const best = loadBest(); if(wpm>best) saveBest(wpm); else bestEl.textContent = Math.round(best);
 
-      const best = loadBest();
-      if(wpm>best) saveBest(wpm);
+      // 目标进度
+      const gt = goalType.value; const gv = Number(goalValue.value);
+      let ratio = 0;
+      if(gt==='time') ratio = Math.min(1, (elapsed/1000) / (gv)); // gv秒
+      else if(gt==='chars') ratio = Math.min(1, chars / gv);
+      goalBar.style.width = (ratio*100).toFixed(1)+'%';
+      goalHint.textContent = gt==='time' ? `目标：${gv} 秒` : (gt==='chars' ? `目标：${gv} 字` : '');
+      goalBar.style.background = ratio===1? '#22c55e' : 'var(--accent)';
+
+      // 全文分页 UI
+      if(fullMode){
+        fullNav.style.display = 'flex';
+        pageNoEl.textContent = String(pageIndex+1);
+        pageTotalEl.textContent = String(pages.length);
+        const absPos = pages.slice(0,pageIndex).join('').length + typed.length;
+        const totalLen = pages.join('').length || 1;
+        pageBar.style.width = (absPos/totalLen*100).toFixed(1)+'%';
+      }else{
+        fullNav.style.display = 'none';
+      }
     }
 
-    function reset(){ typed=''; startAt=null; now=Date.now(); input.value=''; render(); input.focus(); }
+    function reset(){ typed=''; startAt=null; now=Date.now(); input.value=''; paused=false; render(); input.focus(); }
     function next(){ idx++; prompt = pool[idx % pool.length]; reset(); }
-    function importCustom(text){
-      const lines = text.split(/\n+/).map(s=>s.trim()).filter(Boolean);
-      if(lines.length){ pool = lines; idx=0; prompt = pool[0]; reset(); }
+
+    // ===== 句库导入 =====
+    function importCustom(text){ const lines = text.split(/\n+/).map(s=>s.trim()).filter(Boolean); if(lines.length){ pool = lines; idx=0; prompt = pool[0]; fullMode=false; reset(); }}
+
+    // ===== 全文库功能 =====
+    function loadLibrary(){ return localStorage.getItem(LS.library) || ''; }
+    function saveLibrary(text){ localStorage.setItem(LS.library, text); }
+    function exportLibrary(){ const blob = new Blob([loadLibrary()], {type:'text/plain;charset=utf-8'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='typing_library.txt'; a.click(); URL.revokeObjectURL(url); }
+
+    function getProgressMap(){ try{ return JSON.parse(localStorage.getItem(LS.progress)||'{}'); }catch(e){ return {}; } }
+    function setProgressMap(m){ localStorage.setItem(LS.progress, JSON.stringify(m)); }
+    function progressKey(hash){ return hash; }
+
+    function buildFullFromLibrary(startMode){
+      const text = loadLibrary().trim();
+      if(!text){ alert('库为空，请先粘贴或导入文本并保存。'); return false; }
+      const pageSize = Number(localStorage.getItem(LS.pageSize) || libPageSizeSel.value || 800);
+      pages = paginate(text, pageSize);
+      pageIndex = 0; typed='';
+      libHash = hashStr(text + '|' + pageSize);
+      fullMode = true;
+
+      const pg = getProgressMap()[progressKey(libHash)];
+      if(startMode==='resume' && pg){
+        pageIndex = Math.min(pg.pageIndex || 0, pages.length-1);
+        typed = pages[pageIndex].slice(0, Math.min(pg.offsetInPage||0, pages[pageIndex].length));
+        input.value = typed; startAt = Date.now();
+      }
+
+      prompt = pages[pageIndex];
+      fullState.textContent = '全文模式';
+      render(); input.focus();
+      return true;
     }
 
-    // events
-    input.addEventListener('input', (e)=>{
-      typed = input.value;
+    function saveFullProgress(){
+      if(!fullMode || !libHash) return;
+      const m = getProgressMap();
+      m[progressKey(libHash)] = {
+        pageIndex,
+        offsetInPage: typed.length,
+        timestamp: Date.now(),
+      };
+      setProgressMap(m);
+    }
+
+    function clearFullProgress(){
+      const m = getProgressMap(); delete m[progressKey(libHash)]; setProgressMap(m);
+    }
+
+    function gotoPage(pi){
+      if(!fullMode) return;
+      pi = Math.max(0, Math.min(pages.length-1, pi));
+      // 保存当前页进度
+      saveFullProgress();
+      pageIndex = pi; prompt = pages[pageIndex]; typed=''; input.value=''; startAt=Date.now(); render(); input.focus();
+    }
+
+    // ===== 输入逻辑 =====
+    input.addEventListener('input', ()=>{
+      if(paused) { input.value = typed; return; }
+      const old = typed; typed = input.value;
       if(!startAt && typed.length>0) startAt = Date.now();
+      // 错误提示音（最后一个字符）
+      const i = typed.length-1; if(i>=0){ const p = prompt[i] || ''; const t = typed[i] || ''; if(t && p && t!==p) beep(); }
       render();
+      if(fullMode){ saveFullProgress(); if(typed.length >= prompt.length){ // 自动翻页
+          if(pageIndex < pages.length-1){ gotoPage(pageIndex+1); }
+          else { fullState.textContent = '全文完成 ✓'; saveFullProgress(); }
+      }}
     });
+
+    // ===== 目标设置 =====
+    function syncGoalUI(){
+      const gt = goalType.value; goalValue.innerHTML = '';
+      if(gt==='none'){ goalValue.disabled = true; goalHint.textContent=''; }
+      else if(gt==='time'){ goalValue.disabled = false; [60,120,300,600,900].forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s+' 秒'; goalValue.appendChild(o); }); }
+      else { goalValue.disabled = false; [300,500,1000,1500,2000,5000].forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c+' 字'; goalValue.appendChild(o); }); }
+      const savedV = localStorage.getItem(LS.goalValue); if(savedV) goalValue.value = savedV; render();
+    }
+
+    // ===== 事件绑定 =====
+    nextBtn.addEventListener('click', ()=>{ if(fullMode) gotoPage(Math.min(pageIndex+1, pages.length-1)); else next(); });
     resetBtn.addEventListener('click', reset);
-    nextBtn.addEventListener('click', next);
-
-    langBtn.addEventListener('click', ()=>{
-      lang = (lang==='CN')? 'EN':'CN';
-      localStorage.setItem(LANG_KEY, lang);
-      pool = lang==='CN'? CN : EN;
-      langBtn.textContent = (lang==='CN'? '中文':'EN');
-      idx=0; prompt = pool[0]; reset();
+    pauseBtn.addEventListener('click', ()=>{ paused=!paused; pauseBtn.textContent = paused? '继续':'暂停'; });
+    exportBtn.addEventListener('click', ()=>{
+      const elapsed = startAt? now - startAt : 0; const minutes = Math.max(1, elapsed)/60000; const chars = typed.length; const correct = [...typed].filter((c,i)=> c===prompt[i]).length; const cpm = chars>0? chars/minutes : 0; const wpm = cpm/5; const acc = chars>0? 100*correct/Math.max(1, chars) : 100; const gt = goalType.value; const gv = goalValue.value; const rows = [['timestamp','mode','page','pages','chars','correct','seconds','cpm','wpm','accuracy','goalType','goalValue'], [new Date().toISOString(), fullMode? 'full':'sentences', fullMode? (pageIndex+1):'', fullMode? pages.length:'', Math.round(chars), Math.round(correct), Math.round(elapsed/1000), Math.round(cpm), Math.round(wpm), acc.toFixed(2)+'%', gt, gv]]; const csv = rows.map(r=> r.map(x=> '"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='typing_stats.csv'; a.click(); URL.revokeObjectURL(url);
     });
 
+    // 语言/主题/声音
+    langBtn.addEventListener('click', ()=>{ lang = (lang==='CN')? 'EN':'CN'; localStorage.setItem(LS.lang, lang); pool = lang==='CN'? CN : EN; idx=0; prompt = pool[0]; fullMode=false; reset(); langBtn.textContent = (lang==='CN'? '中文':'EN'); });
+    themeBtn.addEventListener('click', ()=>{ const cur = localStorage.getItem(LS.theme) || 'auto'; const next = cur==='auto'? 'light' : (cur==='light'? 'dark' : 'auto'); setTheme(next); themeBtn.textContent = '主题'; });
+    function updateSoundBtn(){ soundBtn.textContent = `错误提示音 ${soundOn?'开':'关'}`; }
+    soundBtn.addEventListener('click', ()=>{ soundOn = !soundOn; localStorage.setItem(LS.sound, soundOn?'1':'0'); updateSoundBtn(); });
+
+    // 句库面板
     customBtn.addEventListener('click', ()=>{ customPanel.style.display = 'block'; });
     cancelBtn.addEventListener('click', ()=>{ customPanel.style.display = 'none'; });
     importBtn.addEventListener('click', ()=>{ importCustom(customTA.value); customPanel.style.display='none'; });
 
-    // ticker
-    tickId = setInterval(()=>{ if(startAt) { now = Date.now(); render(); } }, 200);
+    // 全文库面板
+    libraryBtn.addEventListener('click', ()=>{ libraryPanel.style.display = (libraryPanel.style.display==='none'?'block':'none'); libTA.value = loadLibrary(); libPageSizeSel.value = localStorage.getItem(LS.pageSize)||'800'; });
+    libSave.addEventListener('click', ()=>{ saveLibrary(libTA.value); localStorage.setItem(LS.pageSize, libPageSizeSel.value); alert('已保存到本机浏览器'); });
+    libExport.addEventListener('click', exportLibrary);
+    libClear.addEventListener('click', ()=>{ if(confirm('确定清空库吗？')){ saveLibrary(''); libTA.value=''; }});
+    libUse.addEventListener('click', ()=>{ saveLibrary(libTA.value); localStorage.setItem(LS.pageSize, libPageSizeSel.value); buildFullFromLibrary('start'); });
+    libFile.addEventListener('change', ()=>{ const f=libFile.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ libTA.value = String(r.result || ''); }; r.readAsText(f, 'utf-8'); });
 
-    // init
+    // 全文模式 UI
+    $('#fullBtn').addEventListener('click', ()=> buildFullFromLibrary('start'));
+    $('#restoreBtn').addEventListener('click', ()=>{ pool = (localStorage.getItem(LS.lang)||'CN')==='CN'? CN: EN; idx=0; prompt = pool[0]; fullMode=false; reset(); });
+    prevPageBtn.addEventListener('click', ()=> gotoPage(pageIndex-1));
+    nextPageBtn.addEventListener('click', ()=> gotoPage(pageIndex+1));
+    resumeBtn.addEventListener('click', ()=> buildFullFromLibrary('resume'));
+    restartBtn.addEventListener('click', ()=>{ if(buildFullFromLibrary('start')){ clearFullProgress(); }});
+
+    // 目标初始化
+    goalType.value = localStorage.getItem(LS.goalType) || 'none';
+    goalType.addEventListener('change', ()=>{ localStorage.setItem(LS.goalType, goalType.value); syncGoalUI(); });
+    goalValue.addEventListener('change', ()=>{ localStorage.setItem(LS.goalValue, goalValue.value); render(); });
+    syncGoalUI();
+
+    // 计时
+    setInterval(()=>{ if(startAt && !paused) { now = Date.now(); render(); } }, 200);
+
+    // 初始化
     bestEl.textContent = loadBest();
     langBtn.textContent = (lang==='CN'? '中文':'EN');
+    updateSoundBtn();
     render();
     input.focus();
 
-    // --- PWA bits: create manifest + service worker from in-memory blobs ---
+    // PWA（可选）
     (function setupPWA(){
-      // dynamic manifest (optional)
-      try{
-        const manifest = {name:'Typing Practice', short_name:'Typing', start_url:'.', display:'standalone', theme_color:'#0ea5e9', background_color:'#0b0f19', icons:[]};
-        const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);
-      }catch(e){}
-
-      // service worker (requires https or localhost)
-      if('serviceWorker' in navigator){
-        const sw = `
-          const CACHE='typing-cache-v1';
-          self.addEventListener('install', e=>{ e.waitUntil(caches.open(CACHE).then(c=> c.addAll([self.registration.scope]))); });
-          self.addEventListener('fetch', e=>{ e.respondWith(fetch(e.request).catch(()=> caches.match(self.registration.scope))); });
-        `;
-        const blob = new Blob([sw], {type:'text/javascript'});
-        const url = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(url).catch(()=>{});
-      }
+      try{ const manifest = {name:'Typing Fun', short_name:'TypingFun', start_url:'.', display:'standalone', theme_color:'#0ea5e9', background_color:'#0b0f19', icons:[]}; const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'}); const url = URL.createObjectURL(blob); const link = document.createElement('link'); link.rel='manifest'; link.href=url; document.head.appendChild(link);}catch(e){}
+      if('serviceWorker' in navigator){ const sw = `const CACHE='typing-cache-v4';self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll([self.registration.scope])))});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(self.registration.scope)))})`; const blob = new Blob([sw], {type:'text/javascript'}); const url = URL.createObjectURL(blob); navigator.serviceWorker.register(url).catch(()=>{}); }
     })();
   </script>
 </body>
